@@ -1,0 +1,197 @@
+---
+title: "Homework 2"
+author: Yuqi Wang
+output: github_document
+---
+
+This is my question for HW2.
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+## Problem 1
+
+First, define a path to the dataset.
+```{r}
+path_to_data = './data/Trash-Wheel-Collection-Totals-8-6-19.xlsx'
+```
+
+Read the Mr. Trashwheel dataset.
+```{r}
+trashwheel = 
+  read_excel(path = path_to_data,
+             sheet = "Mr. Trash Wheel",
+             range = cell_cols("A:N")) %>% 
+  janitor::clean_names() %>% 
+  drop_na(dumpster) %>% 
+  mutate(sports_balls = round(sports_balls),
+         sports_balls = as.integer(sports_balls))
+# the default sheet for read_excel() is the first sheet in the excel.
+# if we use round(), the type of the variable will still be double, but if we use as.integer, the type will be integer after transformation.
+```
+
+Read 2018 and 2017 precipitation data.
+
+```{r}
+precip_2018 = 
+  read_excel('./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx',
+             sheet = "2018 Precipitation",
+             skip = 1) %>% 
+  janitor::clean_names() %>% 
+  drop_na(month) %>% 
+  mutate(year = 2018) %>% 
+  relocate(year)
+
+precip_2017 = 
+  read_excel('./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx',
+             sheet = "2017 Precipitation",
+             skip = 1) %>% 
+  janitor::clean_names() %>% 
+  drop_na(month) %>% 
+  mutate(year = 2017) %>% 
+  relocate(year)
+```
+
+Now, combine 2017-2018 precipitation data.
+
+```{r}
+month_df = tibble(
+  month = 1:12,
+  month_name = month.name
+)
+
+precip_data = 
+  bind_rows(precip_2018, precip_2017) #%>% 
+  #mutate(month = month.name[month])
+
+left_join(precip_data, month_df, by = 'month')
+```
+
+This dataset contains information from the Mr. Trashwheel trash collector in Baltimore, Maryland. As trash enters the inner harbor, the trashwheel collects that trash, and stores it in a dumpster. The dataset contains information on year, month and trash collected, including some specific kinds of trash. There are a total of `r nrow(trashwheel)` rows in our final dataset. Additional data sheets include month precipitation data in 2017 and 2018.
+
+## Problem 2
+
+First, read the data set, clean the names, and select the required columns.
+Next, convert the entry variable to a logical variable.
+
+```{r}
+nyc_transit_df = read.csv('./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv', na.strings = c("","NA")) %>% 
+  janitor::clean_names() %>% 
+  select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>% 
+  mutate(entry = recode(entry, 'YES' = TRUE, 'NO' = FALSE))
+```
+
+Description of the dataset:
+This data set includes information about the NYC subway transits. It contains the following variables: `r ls(nyc_transit_df)`. So far, the data has been imported into R, and the variable names have been cleaned, and the entry variable was recoded as a logical variable. The size of the data set is `r nrow(nyc_transit_df)` rows x `r ncol(nyc_transit_df)` columns.
+
+The data is not tidy because from route1 to route11 we see that the route information is spread across 11 columns.
+
+Next, answering the three questions:
+
+```{r}
+# Question 1: distinct stations
+station_num = distinct(nyc_transit_df, line, station_name)
+
+# Question 2: ADA compliant stations
+ada_num = distinct(nyc_transit_df, line, station_name, ada) %>% 
+  filter(ada == TRUE)
+
+# Question 3: proportion of entrances without vending
+no_vending_prop = nyc_transit_df %>% 
+  filter(vending == 'NO', entry == TRUE) %>% nrow() / 
+  nyc_transit_df %>% filter(vending == "NO") %>% nrow()
+```
+
+* There are `r distinct(nyc_transit_df, line, station_name) %>% nrow()` distinct stations.
+* There are `r distinct(nyc_transit_df, line, station_name, ada) %>% filter(ada == TRUE) %>% nrow()` ADA compliant stations.
+* The proportion of station entrances/exits without vending allow entrance is `r no_vending_prop`.
+
+Next, separate route name and route number as separate variables.
+
+```{r}
+nyc_transit_tidy = nyc_transit_df %>% 
+  mutate(route8 = as.character(route8), 
+        route9 = as.character(route9),
+        route10 = as.character(route10),
+        route11 = as.character(route11)) %>% 
+  pivot_longer(
+    route1:route11,
+    names_to = "route",
+    names_prefix = "route",
+    values_to = "route_name"
+  )
+```
+
+Select distinct station that serves A train
+
+```{r}
+a_train_serv = nyc_transit_tidy %>% 
+  filter(route_name == "A") %>% 
+  distinct(line, station_name, ada, .keep_all = TRUE)
+
+a_train_ada = a_train_serv %>% 
+  filter(ada == TRUE)
+```
+
+There are `r nrow(a_train_serv)` distinct stations serving A train.
+Among these stations, `r nrow(a_train_ada)` are ADA compliant.
+
+## Problem 3
+
+First step: process the pols_mon data
+```{r}
+pols = read.csv('./data/fivethirtyeight_datasets/pols-month.csv') %>% 
+  separate(mon, c("year", "month", "day"), "-") %>% 
+  mutate(year = as.integer(year),
+         month = as.integer(month),
+         day = as.integer(day)) %>% 
+  mutate(month = month.name[month]) %>% 
+  mutate(president = ifelse(prez_gop == 1, "gop", "dem")) %>% 
+  select(-day, -prez_gop, -prez_dem) %>% 
+  relocate(year, month, president)
+```
+
+Second step: processing the snp data
+```{r}
+snp = read.csv('./data/fivethirtyeight_datasets/snp.csv') %>% 
+  separate(date, c("month", "day", "year"), "/") %>% 
+  mutate(year = as.integer(year),
+         month = as.integer(month),
+         day = as.integer(day)) %>% 
+  mutate(month = month.name[month]) %>% 
+  select(-day) %>% 
+  relocate(year, month)
+```
+
+Third step: tidying the unemployment data
+
+```{r}
+unemployment = read.csv('./data/fivethirtyeight_datasets/unemployment.csv') %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    jan:dec,
+    names_to = "month",
+    values_to = "unemployment_prop"
+  ) %>% 
+  relocate(year, month)
+```
+
+Join the three data sets together
+
+```{r}
+join_df = pols %>% 
+  left_join(snp, by = c('year', 'month')) %>% 
+  left_join(unemployment, by = c('year', 'month'))
+```
+
+Description of the dataset:
+
+* _pols_: This data set contains `r ncol(pols)` variables, `r ls(pols)`, which are related to the the number of national politicians who are democratic or republican during `r min(pull(pols, year))` and `r max(pull(pols, year))`, and there are `r nrow(pols)` observations in the dataset.
+
+* _snp_: This data set contains `r ncol(snp)` variables, `r ls(snp)`, which are related to Standard & Poor’s stock market index (S&P) during `r min(pull(snp, year))` and `r max(pull(snp, year))`, and there are `r nrow(snp)` observations in the dataset.
+
+* _unemployment_: This data set contains `r ncol(unemployment)` variables, `r ls(unemployment)`, which represent the percentage of unemployment during `r min(pull(unemployment, year))` and `r max(pull(unemployment, year))`, and there are `r nrow(unemployment)` observations in the dataset.
+
+* **resulting data**: The joined dataframe contains `r nrow(join_df)` observations and `r ncol(join_df)` variables to show the general information about politics from `r min(pull(join_df, year))` to `r max(pull(join_df, year))`. The variables include `r ls(join_df)`.
