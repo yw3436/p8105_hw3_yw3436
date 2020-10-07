@@ -97,8 +97,9 @@ First, load, tidy and wrangle the accelerometer data.
 
 ```{r}
 accel_df = read.csv('./data/accel_data.csv') %>% 
+  janitor::clean_names() %>% 
   pivot_longer(
-    activity.1:activity.1440,
+    activity_1:activity_1440,
     names_to = "minute",
     names_prefix = "activity.",
     values_to = "activity"
@@ -140,15 +141,45 @@ From the table we built for the totals, we found that generally speaking, partic
 
 ```{r}
 accel_df %>% 
-  group_by(week, day) %>% 
   mutate(
     hour = ceiling(minute/60)
   ) %>% 
-  ggplot(aes(x = hour, y = activity, color = day)) +
+  group_by(week, day, hour) %>% 
+  summarize(
+    mean_act = mean(activity)
+  ) %>% 
+  ggplot(aes(x = hour, y = mean_act, color = day)) +
   geom_point() +
   geom_line()
 ```
 
+Description of the trend:
 
+
+## Problem 3
+
+First, load the ny_noaa data set and do data cleaning about it.
+```{r}
+data("ny_noaa")
+ny_noaa %>% 
+  separate(date, c("year", "month", "day"), "-") %>% 
+  mutate(year = as.integer(year),
+         month = as.integer(month),
+         day = as.integer(day)) %>%
+  mutate(tmax = as.numeric(tmax),
+         tmin = as.numeric(tmin))
+## What does it mean by making sure xx are given in reasonable unit?
+```
+
+Next, check what are the most commonly observed values for snowfall.
+```{r}
+ny_noaa %>% 
+  count(snow, name = "snow_num") %>% 
+  mutate(rank = min_rank(desc(snow_num))) %>% 
+  arrange(rank)
+```
+########why there is a -13????
+
+For snowfall, 0 is the most commonly observed value, because for most days in a year, there is no snowfall.?????????????/
 
 
