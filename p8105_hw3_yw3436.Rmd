@@ -9,6 +9,7 @@ This is my question for HW3.
 ```{r}
 library(tidyverse)
 library(p8105.datasets)
+library(patchwork)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -161,19 +162,20 @@ Description of the trend:
 First, load the ny_noaa data set and do data cleaning about it.
 ```{r}
 data("ny_noaa")
-ny_noaa %>% 
+noaa_df = ny_noaa %>% 
   separate(date, c("year", "month", "day"), "-") %>% 
   mutate(year = as.integer(year),
          month = as.integer(month),
          day = as.integer(day)) %>%
   mutate(tmax = as.numeric(tmax),
-         tmin = as.numeric(tmin))
+         tmin = as.numeric(tmin)) %>% 
+  mutate(month = month.name[month])
 ## What does it mean by making sure xx are given in reasonable unit?
 ```
 
 Next, check what are the most commonly observed values for snowfall.
 ```{r}
-ny_noaa %>% 
+noaa_df %>% 
   count(snow, name = "snow_num") %>% 
   mutate(rank = min_rank(desc(snow_num))) %>% 
   arrange(rank)
@@ -181,5 +183,46 @@ ny_noaa %>%
 ########why there is a -13????
 
 For snowfall, 0 is the most commonly observed value, because for most days in a year, there is no snowfall.?????????????/
+
+
+Make a two-panel plot showing the average max temperature in January and in July in each station across years
+
+```{r}
+tmax_df = noaa_df %>% 
+  filter(month == c("January", "July")) %>% 
+  group_by(id, month, year) %>% 
+  summarize(tmax_mean = mean(tmax, na.rm = TRUE)) %>% 
+  na.omit()
+
+jan_plot = tmax_df %>% 
+  filter(month == c("January")) %>% 
+  mutate(year = as.character(year)) %>% 
+  ggplot(aes(x = year, y = tmax_mean)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
+  
+jul_plot = tmax_df %>% 
+  filter(month == c("July")) %>% 
+  mutate(year = as.character(year)) %>% 
+  ggplot(aes(x = year, y = tmax_mean)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
+
+jan_plot / jul_plot
+```
+
+Description:
+
+Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+
+```{r}
+noaa_df %>% 
+  filter(0 < snow, snow < 100) %>% 
+  group_by(year) %>% 
+  select(year, snow) %>% 
+  mutate(year = as.character(year)) %>% 
+  ggplot(aes(x = year, y = snow)) +
+  geom_violin()
+```
 
 
