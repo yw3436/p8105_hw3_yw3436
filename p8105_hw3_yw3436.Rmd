@@ -104,12 +104,14 @@ accel_df = read.csv('./data/accel_data.csv') %>%
     values_to = "activity"
   ) %>% 
   mutate(
-    day_cat = case_when(
+    day = factor(day),
+    day = forcats::fct_relevel(day, c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+  )) %>% 
+  mutate(day_cat = case_when(
       day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday") ~ "weekday",
       day %in% c("Saturday", "Sunday") ~ "weekend",
-      TRUE ~ ""
-    )
-  ) %>% 
+      TRUE ~ ""),
+    minute = as.numeric(minute)) %>% 
   relocate(day_id, week, day, day_cat)
 ```
 
@@ -123,10 +125,6 @@ Next, we create a total activity variable for each day, and create a table to sh
 accel_total_day = accel_df %>% 
   group_by(week, day) %>% 
   summarise(total_act_day = sum(activity)) %>% 
-  mutate(
-    day = factor(day),
-    day = forcats::fct_relevel(day, c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
-  ) %>% 
   arrange(week, day) %>% 
   pivot_wider(
     names_from = day,
@@ -140,7 +138,16 @@ accel_total_day
 ####not sure about this
 From the table we built for the totals, we found that generally speaking, participants tend to do more activity on Fridays and have the lowest activity counts on Saturdays.
 
-
+```{r}
+accel_df %>% 
+  group_by(week, day) %>% 
+  mutate(
+    hour = ceiling(minute/60)
+  ) %>% 
+  ggplot(aes(x = hour, y = activity, color = day)) +
+  geom_point() +
+  geom_line()
+```
 
 
 
