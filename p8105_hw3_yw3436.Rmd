@@ -10,7 +10,21 @@ This is my question for HW3.
 library(tidyverse)
 library(p8105.datasets)
 
-## add more in this part
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 ## Problem 1
@@ -57,7 +71,7 @@ instacart %>%
   group_by(aisle) %>% 
   count(product_name) %>% 
   mutate(rank = min_rank(desc(n))) %>% 
-  #use max_rank
+  #always use max_rank
   filter(rank < 4) %>% 
   arrange(aisle, desc(n)) %>% 
   knitr::kable()
@@ -75,6 +89,59 @@ instacart %>%
     values_from = mean_hour
   )
 ```
+
+
+## Problem 2
+
+First, load, tidy and wrangle the accelerometer data.
+
+```{r}
+accel_df = read.csv('./data/accel_data.csv') %>% 
+  pivot_longer(
+    activity.1:activity.1440,
+    names_to = "minute",
+    names_prefix = "activity.",
+    values_to = "activity"
+  ) %>% 
+  mutate(
+    day_cat = case_when(
+      day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday") ~ "weekday",
+      day %in% c("Saturday", "Sunday") ~ "weekend",
+      TRUE ~ ""
+    )
+  ) %>% 
+  relocate(day_id, week, day, day_cat)
+```
+
+Description of the data set:
+
+This data set contains `r nrow(accel_df)` rows and `r ncol(accel_df)` columns. It includes the following variables: `r ls(accel_df)`, to describe the activity counts for `r ncol(accel_df)` observations.
+
+Next, we create a total activity variable for each day, and create a table to show the totals.
+
+```{r}
+accel_total_day = accel_df %>% 
+  group_by(week, day) %>% 
+  summarise(total_act_day = sum(activity)) %>% 
+  mutate(
+    day = factor(day),
+    day = forcats::fct_relevel(day, c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+  ) %>% 
+  arrange(week, day) %>% 
+  pivot_wider(
+    names_from = day,
+    values_from = total_act_day
+  ) %>% 
+  knitr::kable(digit = 1)
+
+accel_total_day
+```
+
+####not sure about this
+From the table we built for the totals, we found that generally speaking, participants tend to do more activity on Fridays and have the lowest activity counts on Saturdays.
+
+
+
 
 
 
