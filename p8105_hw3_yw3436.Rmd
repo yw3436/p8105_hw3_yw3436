@@ -137,7 +137,7 @@ accel_total_day = accel_df %>%
 accel_total_day
 ```
 
-####not sure about this
+####not sure about this say the 1440 things here
 From the table we built for the totals, we found that generally speaking, participants tend to do more activity on Fridays and have the lowest activity counts on Saturdays.
 
 ```{r}
@@ -145,12 +145,9 @@ accel_df %>%
   mutate(
     hour = ceiling(minute/60)
   ) %>% 
-  group_by(week, day, hour) %>% 
-  summarize(
-    mean_act = mean(activity)
-  ) %>% 
-  ggplot(aes(x = hour, y = mean_act, color = day)) +
-  geom_point() +
+  group_by(day_id, hour) %>% 
+  mutate(mean_act = mean(activity)) %>% 
+  ggplot(aes(x = hour, y = mean_act, color = day, group = day_id)) +
   geom_line()
 ```
 
@@ -168,8 +165,11 @@ noaa_df = ny_noaa %>%
          month = as.integer(month),
          day = as.integer(day)) %>%
   mutate(tmax = as.numeric(tmax),
-         tmin = as.numeric(tmin)) %>% 
-  mutate(month = month.name[month])
+         tmin = as.numeric(tmin),
+         month = month.name[month]) %>% 
+  mutate(tmax = tmax/10,
+         tmin = tmin/10,
+         prcp = prcp/10)
 ## What does it mean by making sure xx are given in reasonable unit?
 ```
 
@@ -188,27 +188,15 @@ For snowfall, 0 is the most commonly observed value, because for most days in a 
 Make a two-panel plot showing the average max temperature in January and in July in each station across years
 
 ```{r}
-tmax_df = noaa_df %>% 
+noaa_df %>% 
   filter(month == c("January", "July")) %>% 
   group_by(id, month, year) %>% 
   summarize(tmax_mean = mean(tmax, na.rm = TRUE)) %>% 
-  na.omit()
-
-jan_plot = tmax_df %>% 
-  filter(month == c("January")) %>% 
-  mutate(year = as.character(year)) %>% 
-  ggplot(aes(x = year, y = tmax_mean)) +
-  geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
-  
-jul_plot = tmax_df %>% 
-  filter(month == c("July")) %>% 
-  mutate(year = as.character(year)) %>% 
-  ggplot(aes(x = year, y = tmax_mean)) +
-  geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
-
-jan_plot / jul_plot
+  #na.omit() 
+  ggplot(aes(x = year, y = tmax_mean, group = id)) +
+  geom_line(alpha = 0.3) +
+  facet_grid(month ~ .)
+########should I delete these nan values?
 ```
 
 Description:
@@ -216,13 +204,23 @@ Description:
 Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
 
 ```{r}
-noaa_df %>% 
+tmax_min_p = noaa_df %>% 
+  na.omit(tmax,tmin) %>% 
+  select(tmax, tmin) %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_bin2d()
+
+
+snowfall_df = noaa_df %>% 
   filter(0 < snow, snow < 100) %>% 
   group_by(year) %>% 
   select(year, snow) %>% 
   mutate(year = as.character(year)) %>% 
   ggplot(aes(x = year, y = snow)) +
-  geom_violin()
+  geom_boxplot() +  
+  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
+
+tmax_min_p / snowfall_df
 ```
 
 
