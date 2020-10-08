@@ -4,7 +4,7 @@ author: Yuqi Wang
 output: github_document
 ---
 
-This is my question for HW3.
+This is my answer for HW3.
 
 ```{r}
 library(tidyverse)
@@ -119,7 +119,7 @@ accel_df = read.csv('./data/accel_data.csv') %>%
 
 Description of the data set:
 
-This data set contains `r nrow(accel_df)` rows and `r ncol(accel_df)` columns. It includes the following variables: `r ls(accel_df)`, to describe the activity counts for `r ncol(accel_df)` observations.
+This data set contains `r nrow(accel_df)` rows and `r ncol(accel_df)` columns. It includes the following variables: `r ls(accel_df)`, to describe the activity counts for `r nrow(accel_df)` observations.
 
 Next, we create a total activity variable for each day, and create a table to show the totals.
 
@@ -137,8 +137,7 @@ accel_total_day = accel_df %>%
 accel_total_day
 ```
 
-####not sure about this say the 1440 things here
-From the table we built for the totals, we found that generally speaking, participants tend to do more activity on Fridays and have the lowest activity counts on Saturdays.
+From the table we built for the totals, we found that generally speaking, this participant tended to have more activity on Fridays. Also, on Saturdays, there are two days with summed activity counts of 1440, which are suspicious numbers because 1440 means the person has an activity count of 1 for every minute on the two days, indicating that this person might have taken off the device on the two days.
 
 ```{r}
 accel_df %>% 
@@ -152,7 +151,7 @@ accel_df %>%
 ```
 
 Description of the trend:
-
+According to the graph, the participant tends to have more activity from 5am to 1pm and from 6pm to 9pm. On Fridays, the person tend to have more activities in the evening, while on Sundays, the person has more activity at daytime. the highest average activity count is on Monday.
 
 ## Problem 3
 
@@ -182,8 +181,7 @@ noaa_df %>%
 ```
 ########why there is a -13????
 
-For snowfall, 0 is the most commonly observed value, because for most days in a year, there is no snowfall.?????????????/
-
+For snowfall, 0 is the most commonly observed value, because for most days in a year, there is no snowfall.
 
 Make a two-panel plot showing the average max temperature in January and in July in each station across years
 
@@ -199,7 +197,12 @@ noaa_df %>%
 ########should I delete these nan values?
 ```
 
-Description:
+Description of trend:
+
+According to the graph, the mean max temperatures for January and July show a fluctuant trend from 1980 to 2010. The max temperature in Januarys shows a slight increasing trend, which may indicate global warming, while the max temperature in Julys are relatively stable. The difference of max temperature measures among all the stations is about 10 degree Celsius.
+
+There are several outliers in the two graphs. In the graph of January, there is a extremely high outlier with max temperature of 13 degress Celsius. In July, there are two outliers with low temperature of 14 and 17.
+
 
 Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
 
