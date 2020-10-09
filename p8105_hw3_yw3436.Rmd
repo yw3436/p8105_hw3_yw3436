@@ -206,6 +206,11 @@ There are several outliers in the two graphs. In the graph of January, there is 
 Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
 
 ```{r}
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.height = 12
+)
+
 tmax_min_p = noaa_df %>% 
   na.omit(tmax,tmin) %>% 
   ggplot(aes(x = tmin, y = tmax)) +
