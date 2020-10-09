@@ -148,7 +148,13 @@ accel_df %>%
   group_by(day_id, hour) %>% 
   mutate(mean_act = mean(activity)) %>% 
   ggplot(aes(x = hour, y = mean_act, color = day, group = day_id)) +
-  geom_line()
+  geom_line() +
+  labs(
+    title = "Activity plot",
+    x = "24 hours",
+    y = "Mean activity counts per hour",
+    caption = "Data from the accelerometer data"
+  )
 ```
 
 Description of the trend:
@@ -170,7 +176,6 @@ noaa_df = ny_noaa %>%
   mutate(tmax = tmax/10,
          tmin = tmin/10,
          prcp = prcp/10)
-## What does it mean by making sure xx are given in reasonable unit?
 ```
 
 Next, check what are the most commonly observed values for snowfall.
@@ -190,10 +195,15 @@ noaa_df %>%
   filter(month == c("January", "July")) %>% 
   group_by(id, month, year) %>% 
   summarize(tmax_mean = mean(tmax, na.rm = TRUE)) %>% 
-  #na.omit() 
   ggplot(aes(x = year, y = tmax_mean, group = id)) +
   geom_line(alpha = 0.3) +
-  facet_grid(month ~ .)
+  facet_grid(month ~ .) +
+  labs(
+    title = "Temperature plot",
+    x = "Year",
+    y = "Mean Maxiumum daily temperature (C)",
+    caption = "Data from the noaa package"
+ )
 ```
 
 Description of trend:
@@ -214,7 +224,13 @@ knitr::opts_chunk$set(
 tmax_min_p = noaa_df %>% 
   na.omit(tmax,tmin) %>% 
   ggplot(aes(x = tmin, y = tmax)) +
-  geom_hex()
+  geom_hex() +
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maximum daily temperature (C)",
+    caption = "Data from the noaa package"
+ )
 
 snowfall_df = noaa_df %>% 
   filter(0 < snow, snow < 100) %>% 
@@ -223,7 +239,13 @@ snowfall_df = noaa_df %>%
   mutate(year = as.character(year)) %>% 
   ggplot(aes(x = year, y = snow)) +
   geom_boxplot() +  
-  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) +
+  labs(
+    title = "Snowfall distribution plot",
+    x = "Year",
+    y = "Snow fall",
+    caption = "Data from the noaa package"
+ )
 
 tmax_min_p / snowfall_df
 ```
