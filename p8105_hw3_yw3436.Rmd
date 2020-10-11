@@ -178,6 +178,11 @@ noaa_df = ny_noaa %>%
          prcp = prcp/10)
 ```
 
+Description of the dataset:
+
+This data set contains `r nrow(noaa_df)` rows and `r ncol(noaa_df)` columns. It includes the following variables: `r ls(noaa_df)`, to describe the information of weather collected for `r nrow(noaa_df)` observations. There are many missing values for `tmax` and `tmin`, but the data analysis is not affected.
+
+
 Next, check what are the most commonly observed values for snowfall.
 ```{r}
 noaa_df %>% 
